@@ -121,7 +121,7 @@ export class AuthService {
     });
     const response = {
       message: 'User refreshed',
-      user: user.id,
+      id: user.id,
       access_token: tokens.access_token,
     };
     return response;
@@ -249,7 +249,7 @@ export class AuthService {
     });
     const response = {
       message: 'Admin refreshed',
-      admin: admin.id,
+      id: admin.id,
       access_token: tokens.access_token,
     };
     return response;

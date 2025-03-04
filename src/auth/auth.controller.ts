@@ -1,10 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Res, UseGuards, HttpCode } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { UpdateUserDto } from '../users/dto';
 import { SignInDto } from './dto/signIn-dto';
 import { CookieGetter } from '../decorators/cookie-getter.decorator';
 import { Response } from 'express';
+import { AuthGuard } from '@nestjs/passport';
+import { RefreshTokenGuard } from '../common/guards';
+import { GetCurrentUser, GetCurrentUserId } from '../common/decorator';
+import { JwtPayloadWithRefreshToken, ResponseFields } from '../common/types';
 
 @Controller('auth')
 export class AuthController {
@@ -30,6 +34,21 @@ export class AuthController {
     return this.authService.userSignIn(signInDto, res);
   }
 
+  @UseGuards(RefreshTokenGuard)
+  @Post('refresh')
+  async userRefresh(
+    @GetCurrentUserId() userId: number,
+    @GetCurrentUser('refreshToken') refreshToken: string,
+    @GetCurrentUser() user: JwtPayloadWithRefreshToken,
+    // @Param("id") id: number,
+    // @CookieGetter("refresh_token") refreshToken: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ResponseFields> {
+    return this.authService.userRefreshToken(userId, refreshToken, res);
+  }
+
+  @UseGuards(RefreshTokenGuard)
+  @HttpCode(200)
   @Post('user-sign-out')
   user_sign_out(
     @CookieGetter('refresh_token') refreshToken: string,
@@ -51,6 +70,19 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     return this.authService.adminSignIn(signInDto, res);
+  }
+
+  @UseGuards(RefreshTokenGuard)
+  @Post('admin-refresh')
+  async adminRefresh(
+    @GetCurrentUserId() id: number,
+    @GetCurrentUser('refreshToken') refreshToken: string,
+    @GetCurrentUser() user: JwtPayloadWithRefreshToken,
+    // @Param("id") id: number,
+    // @CookieGetter("refresh_token") refreshToken: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ResponseFields> {
+    return this.authService.adminRefreshToken(id, refreshToken, res);
   }
 
   @Post('admin-sign-out')
